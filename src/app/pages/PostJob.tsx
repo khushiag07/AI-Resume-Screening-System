@@ -70,10 +70,10 @@ export default function PostJob({ onClose, onAddJob }: PostJobProps) {
 
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-[#111827] w-[520px] rounded-2xl p-6 text-white border border-white/10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
+      <div className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-2xl border border-white/10 bg-[#111827] p-4 text-white sm:p-6">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="text-2xl font-bold">Create New Job</h2>
+          <h2 className="text-xl font-bold sm:text-2xl">Create New Job</h2>
 
           <button onClick={onClose}>
             <X size={22} />
@@ -123,7 +123,7 @@ export default function PostJob({ onClose, onAddJob }: PostJobProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Paste job description..."
-              rows={6}
+              rows={5}
               className="w-full mt-2 p-3 rounded-xl bg-black/30 border border-white/10 resize-none"
             />
           </div>

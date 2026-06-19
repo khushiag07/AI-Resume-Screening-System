@@ -1,50 +1,29 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-size: 16px;
-  --background: #070B13;
-  --foreground: #E8EDF5;
-  --card: #0D1220;
-  --card-foreground: #E8EDF5;
-  --popover: #111827;
-  --popover-foreground: #E8EDF5;
-  --primary: #f6f3f0;
-  --primary-foreground: #070B13;
-  --secondary: #131E30;
-  --secondary-foreground: #94A3B8;
-  --muted: #111827;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #334155;
+  --muted: #F1F5F9;
   --muted-foreground: #64748B;
-  --accent: #1C2A3F;
-  --accent-foreground: #fefcf9;
-  --destructive: #EF4444;
-  --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.07);
-  --input: transparent;
-  --input-background: #131E30;
-  --switch-background: #1C2A3F;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(98.83% 0.00274 84.297);
-  --chart-5: oklch(96.436% 0.00276 84.305);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --accent: #E2E8F0;
+  --accent-foreground: #0F172A;
+  --border: rgba(15, 23, 42, 0.12);
+  --border-strong: rgba(15, 23, 42, 0.22);
+  --input-background: #FFFFFF;
+  --switch-background: #CBD5E1;
 }
 
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
+  --border-strong: rgba(255, 255, 255, 0.16);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
@@ -118,6 +97,17 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
+[data-theme="light"] {
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-hover: #F1F5F9;
+  --text: #0F172A;
+  --text-dim: #64748B;
+  --text-mid: #334155;
+  --border: rgba(15,23,42,0.12);
+  --border-strong: rgba(15,23,42,0.22);
+}
+
 
 @layer base {
   * {

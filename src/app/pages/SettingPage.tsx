@@ -25,6 +25,17 @@ type UserData = {
   avatarUrl: string;
 };
 
+type ThemeColors = {
+  bg: string;
+  surface: string;
+  surfaceSoft: string;
+  text: string;
+  textDim: string;
+  textMid: string;
+  border: string;
+  borderStrong: string;
+};
+
 export default function SettingsPage() {
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -37,22 +48,86 @@ export default function SettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [saved, setSaved] = useState(false);
 
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [resumeUploadAlerts, setResumeUploadAlerts] = useState(true);
   const [weeklyReports, setWeeklyReports] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+
+const [darkMode, setDarkMode] = useState(() => {
+
+  const savedTheme =
+  localStorage.getItem(
+    "resumeai-theme"
+  );
+
+
+  if(!savedTheme){
+    localStorage.setItem(
+      "resumeai-theme",
+      "dark"
+    );
+
+    document.documentElement.classList.add(
+      "dark"
+    );
+
+    return true;
+  }
+
+
+  return savedTheme === "dark";
+
+});
+
   const [autoShortlist, setAutoShortlist] = useState(true);
   const [showBiasFlags, setShowBiasFlags] = useState(true);
   const [anonymizeCandidates, setAnonymizeCandidates] = useState(false);
   const [saveScreeningHistory, setSaveScreeningHistory] = useState(true);
   const [minScore, setMinScore] = useState(70);
 
+  const theme: ThemeColors = darkMode
+    ? {
+        bg: c.bg,
+        surface: c.surface,
+        surfaceSoft: c.bg,
+        text: c.text,
+        textDim: c.textDim,
+        textMid: c.textMid,
+        border: c.border,
+        borderStrong: c.borderStrong,
+      }
+    : {
+        bg: "#F8FAFC",
+        surface: "#FFFFFF",
+        surfaceSoft: "#F1F5F9",
+        text: "#0F172A",
+        textDim: "#64748B",
+        textMid: "#334155",
+        border: "rgba(15,23,42,0.12)",
+        borderStrong: "rgba(15,23,42,0.22)",
+      };
+
   useEffect(() => {
     loadUser();
   }, []);
+useEffect(() => {
+  if (darkMode) {
+    document.documentElement.classList.add("dark");
+
+    localStorage.setItem(
+      "resumeai-theme",
+      "dark"
+    );
+  } else {
+    document.documentElement.classList.remove("dark");
+
+    localStorage.setItem(
+      "resumeai-theme",
+      "light"
+    );
+  }
+}, [darkMode]);
 
   const loadUser = async () => {
     setLoading(true);
@@ -96,13 +171,14 @@ export default function SettingsPage() {
       return;
     }
 
+    await supabase.auth.refreshSession();
+    await loadUser();
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
   };
 
-  const handleImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (!file || !userData.id) return;
@@ -127,9 +203,7 @@ export default function SettingsPage() {
       return;
     }
 
-    const { data } = supabase.storage
-      .from("profiles")
-      .getPublicUrl(filePath);
+    const { data } = supabase.storage.from("profiles").getPublicUrl(filePath);
 
     const avatarUrl = data.publicUrl;
 
@@ -149,6 +223,9 @@ export default function SettingsPage() {
       alert(updateError.message);
       return;
     }
+
+    await supabase.auth.refreshSession();
+    await loadUser();
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
@@ -172,6 +249,9 @@ export default function SettingsPage() {
       return;
     }
 
+    await supabase.auth.refreshSession();
+    await loadUser();
+
     if (fileRef.current) fileRef.current.value = "";
 
     setSaved(true);
@@ -189,10 +269,10 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center"
+        className="flex min-h-screen items-center justify-center"
         style={{
-          background: c.bg,
-          color: c.text,
+          background: theme.bg,
+          color: theme.text,
           fontFamily: FONT,
         }}
       >
@@ -203,28 +283,28 @@ export default function SettingsPage() {
 
   return (
     <main
-      className="min-h-screen px-8 py-7"
+      className="min-h-screen px-4 py-5 pb-24 sm:px-6 lg:px-8 lg:py-7 lg:pb-8"
       style={{
-        background: c.bg,
-        color: c.text,
+        background: theme.bg,
+        color: theme.text,
         fontFamily: FONT,
       }}
     >
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p
-              className="text-[10px] font-bold tracking-[0.22em] uppercase"
+              className="text-[10px] font-bold uppercase tracking-[0.22em]"
               style={{ color: c.amber }}
             >
               Account Settings
             </p>
 
-            <h1 className="text-2xl font-bold mt-2 tracking-tight">
+            <h1 className="mt-2 text-2xl font-bold tracking-tight">
               Manage your workspace
             </h1>
 
-            <p className="text-sm mt-1" style={{ color: c.textDim }}>
+            <p className="mt-1 text-sm" style={{ color: theme.textDim }}>
               Your name, email and profile photo are connected to your login
               account.
             </p>
@@ -233,7 +313,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSaveProfile}
             disabled={saving}
-            className="h-10 px-4 rounded-xl flex items-center gap-2 text-sm font-semibold disabled:opacity-60"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold disabled:opacity-60 sm:w-auto"
             style={{
               background: c.amber,
               color: "#111827",
@@ -246,7 +326,7 @@ export default function SettingsPage() {
 
         {saved && (
           <div
-            className="rounded-2xl px-4 py-3 flex items-center gap-3 border text-sm"
+            className="flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm"
             style={{
               background: "rgba(34,197,94,0.12)",
               borderColor: "rgba(34,197,94,0.3)",
@@ -258,17 +338,17 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <section
-            className="rounded-3xl p-5 border"
+            className="rounded-3xl border p-5"
             style={{
-              background: c.surface,
-              borderColor: c.border,
+              background: theme.surface,
+              borderColor: theme.border,
             }}
           >
             <div className="text-center">
               <div
-                className="w-24 h-24 mx-auto rounded-full overflow-hidden flex items-center justify-center text-2xl font-bold"
+                className="mx-auto flex h-24 w-24 items-center justify-center overflow-hidden rounded-full text-2xl font-bold"
                 style={{
                   background: c.amberDim,
                   color: c.amber,
@@ -277,9 +357,15 @@ export default function SettingsPage() {
               >
                 {userData.avatarUrl ? (
                   <img
-                    src={userData.avatarUrl}
+                    src={`${userData.avatarUrl}?v=${Date.now()}`}
                     alt="Profile"
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
+                    onError={() =>
+                      setUserData((prev) => ({
+                        ...prev,
+                        avatarUrl: "",
+                      }))
+                    }
                   />
                 ) : (
                   initials
@@ -294,10 +380,10 @@ export default function SettingsPage() {
                 className="hidden"
               />
 
-              <div className="flex justify-center gap-2 mt-4">
+              <div className="mt-4 flex justify-center gap-2">
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="px-3 py-2 rounded-xl text-xs flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs"
                   style={{
                     background: c.amber,
                     color: "#111827",
@@ -310,11 +396,11 @@ export default function SettingsPage() {
                 {userData.avatarUrl && (
                   <button
                     onClick={removeImage}
-                    className="px-3 py-2 rounded-xl text-xs flex items-center gap-2 border"
+                    className="flex items-center gap-2 rounded-xl border px-3 py-2 text-xs"
                     style={{
-                      background: c.bg,
-                      color: c.textMid,
-                      borderColor: c.border,
+                      background: theme.surfaceSoft,
+                      color: theme.textMid,
+                      borderColor: theme.border,
                     }}
                   >
                     <Trash2 size={14} />
@@ -323,9 +409,9 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              <h2 className="text-lg font-bold mt-4">{userData.fullName}</h2>
+              <h2 className="mt-4 text-lg font-bold">{userData.fullName}</h2>
 
-              <p className="text-xs mt-1" style={{ color: c.textDim }}>
+              <p className="mt-1 text-xs" style={{ color: theme.textDim }}>
                 Recruiter
               </p>
             </div>
@@ -335,32 +421,37 @@ export default function SettingsPage() {
                 icon={<Briefcase size={16} />}
                 label="Role"
                 value="Recruiter"
+                theme={theme}
               />
 
               <InfoBox
                 icon={<Mail size={16} />}
                 label="Email"
                 value={userData.email}
+                theme={theme}
               />
 
               <InfoBox
                 icon={<Lock size={16} />}
                 label="Account"
                 value="Logged In"
+                theme={theme}
               />
             </div>
           </section>
 
-          <div className="lg:col-span-2 space-y-5">
+          <div className="space-y-5 lg:col-span-2">
             <Card
               icon={<User size={20} />}
               title="Profile Information"
               description="This information comes from your logged-in account."
+              theme={theme}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <InputBox
                   label="Full Name"
                   value={userData.fullName}
+                  theme={theme}
                   onChange={(v) =>
                     setUserData((prev) => ({
                       ...prev,
@@ -373,6 +464,7 @@ export default function SettingsPage() {
                   label="Email"
                   value={userData.email}
                   disabled
+                  theme={theme}
                   onChange={() => {}}
                 />
               </div>
@@ -382,12 +474,14 @@ export default function SettingsPage() {
               icon={<Bell size={20} />}
               title="Notifications"
               description="Control alerts and reports for this account."
+              theme={theme}
             >
               <ToggleRow
                 title="Email Alerts"
                 description="Receive important hiring updates."
                 checked={emailAlerts}
                 onChange={setEmailAlerts}
+                theme={theme}
               />
 
               <ToggleRow
@@ -395,6 +489,7 @@ export default function SettingsPage() {
                 description="Notify when candidates upload resumes."
                 checked={resumeUploadAlerts}
                 onChange={setResumeUploadAlerts}
+                theme={theme}
               />
 
               <ToggleRow
@@ -402,6 +497,7 @@ export default function SettingsPage() {
                 description="Receive weekly screening analytics."
                 checked={weeklyReports}
                 onChange={setWeeklyReports}
+                theme={theme}
               />
             </Card>
 
@@ -409,12 +505,14 @@ export default function SettingsPage() {
               icon={<Shield size={20} />}
               title="AI Screening & Privacy"
               description="Manage AI candidate screening rules."
+              theme={theme}
             >
               <ToggleRow
                 title="Auto Shortlist"
                 description="Automatically shortlist strong candidates."
                 checked={autoShortlist}
                 onChange={setAutoShortlist}
+                theme={theme}
               />
 
               <ToggleRow
@@ -422,6 +520,7 @@ export default function SettingsPage() {
                 description="Highlight possible biased screening signals."
                 checked={showBiasFlags}
                 onChange={setShowBiasFlags}
+                theme={theme}
               />
 
               <ToggleRow
@@ -429,6 +528,7 @@ export default function SettingsPage() {
                 description="Hide personal details while reviewing resumes."
                 checked={anonymizeCandidates}
                 onChange={setAnonymizeCandidates}
+                theme={theme}
               />
 
               <ToggleRow
@@ -436,22 +536,23 @@ export default function SettingsPage() {
                 description="Keep screening results for analytics."
                 checked={saveScreeningHistory}
                 onChange={setSaveScreeningHistory}
+                theme={theme}
               />
 
               <div className="pt-4">
-                <div className="flex justify-between items-center mb-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <h4 className="text-sm font-semibold">
                       Minimum Shortlist Score
                     </h4>
 
-                    <p className="text-xs mt-1" style={{ color: c.textDim }}>
+                    <p className="mt-1 text-xs" style={{ color: theme.textDim }}>
                       Candidates above this score can be shortlisted.
                     </p>
                   </div>
 
                   <span
-                    className="px-3 py-1 rounded-full text-sm font-bold"
+                    className="rounded-full px-3 py-1 text-sm font-bold"
                     style={{
                       background: c.amberDim,
                       color: c.amber,
@@ -476,12 +577,18 @@ export default function SettingsPage() {
               icon={<Palette size={20} />}
               title="Appearance"
               description="Control dashboard display preference."
+              theme={theme}
             >
               <ToggleRow
                 title="Dark Mode"
-                description="Use dark professional dashboard theme."
+                description={
+                  darkMode
+                    ? "Dark professional dashboard theme is active."
+                    : "Light dashboard theme is active."
+                }
                 checked={darkMode}
                 onChange={setDarkMode}
+                theme={theme}
               />
             </Card>
 
@@ -489,24 +596,28 @@ export default function SettingsPage() {
               icon={<Database size={20} />}
               title="Data Management"
               description="Account-based profile data using Supabase Auth."
+              theme={theme}
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <MiniFeature
                   icon={<Eye size={18} />}
                   title="Profile Sync"
                   text="Name and DP come from login account."
+                  theme={theme}
                 />
 
                 <MiniFeature
                   icon={<Lock size={18} />}
                   title="Auth Based"
                   text="Each user sees their own profile."
+                  theme={theme}
                 />
 
                 <MiniFeature
                   icon={<Database size={18} />}
                   title="Supabase Storage"
                   text="DP image is saved in bucket."
+                  theme={theme}
                 />
               </div>
             </Card>
@@ -522,23 +633,26 @@ function Card({
   title,
   description,
   children,
+  theme,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
   children: React.ReactNode;
+  theme: ThemeColors;
 }) {
   return (
     <section
-      className="rounded-3xl p-5 border"
+      className="rounded-3xl border p-5"
       style={{
-        background: c.surface,
-        borderColor: c.border,
+        background: theme.surface,
+        borderColor: theme.border,
+        color: theme.text,
       }}
     >
-      <div className="flex gap-3 mb-5">
+      <div className="mb-5 flex gap-3">
         <div
-          className="w-11 h-11 rounded-2xl flex items-center justify-center"
+          className="flex h-11 w-11 items-center justify-center rounded-2xl"
           style={{
             background: c.amberDim,
             color: c.amber,
@@ -550,7 +664,7 @@ function Card({
         <div>
           <h3 className="text-base font-bold">{title}</h3>
 
-          <p className="text-xs mt-1" style={{ color: c.textDim }}>
+          <p className="mt-1 text-xs" style={{ color: theme.textDim }}>
             {description}
           </p>
         </div>
@@ -566,15 +680,17 @@ function InputBox({
   value,
   onChange,
   disabled = false,
+  theme,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  theme: ThemeColors;
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium" style={{ color: c.textDim }}>
+      <span className="text-xs font-medium" style={{ color: theme.textDim }}>
         {label}
       </span>
 
@@ -582,11 +698,11 @@ function InputBox({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-2 px-3 py-2 rounded-xl border outline-none text-sm disabled:opacity-60"
+        className="mt-2 w-full rounded-xl border px-3 py-2 text-sm outline-none disabled:opacity-60"
         style={{
-          background: c.bg,
-          borderColor: c.border,
-          color: c.text,
+          background: theme.surfaceSoft,
+          borderColor: theme.border,
+          color: theme.text,
           fontFamily: FONT,
         }}
       />
@@ -599,21 +715,23 @@ function ToggleRow({
   description,
   checked,
   onChange,
+  theme,
 }: {
   title: string;
   description: string;
   checked: boolean;
   onChange: (value: boolean) => void;
+  theme: ThemeColors;
 }) {
   return (
     <div
-      className="flex justify-between items-center gap-4 border-b pb-4 last:border-b-0 last:pb-0"
-      style={{ borderColor: c.border }}
+      className="flex items-center justify-between gap-4 border-b pb-4 last:border-b-0 last:pb-0"
+      style={{ borderColor: theme.border }}
     >
       <div>
         <h4 className="text-sm font-semibold">{title}</h4>
 
-        <p className="text-xs mt-1" style={{ color: c.textDim }}>
+        <p className="mt-1 text-xs" style={{ color: theme.textDim }}>
           {description}
         </p>
       </div>
@@ -621,16 +739,16 @@ function ToggleRow({
       <button
         type="button"
         onClick={() => onChange(!checked)}
-        className="w-12 h-7 rounded-full p-1 flex transition shrink-0"
+        className="flex h-7 w-12 shrink-0 rounded-full p-1 transition"
         style={{
-          background: checked ? c.amber : c.borderStrong,
+          background: checked ? c.amber : theme.borderStrong,
           justifyContent: checked ? "flex-end" : "flex-start",
         }}
       >
         <span
-          className="w-5 h-5 rounded-full"
+          className="h-5 w-5 rounded-full"
           style={{
-            background: checked ? "#111827" : c.textDim,
+            background: checked ? "#111827" : theme.textDim,
           }}
         />
       </button>
@@ -642,24 +760,26 @@ function InfoBox({
   icon,
   label,
   value,
+  theme,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
+  theme: ThemeColors;
 }) {
   return (
     <div
-      className="rounded-2xl p-3 flex gap-3 items-center"
-      style={{ background: c.bg }}
+      className="flex items-center gap-3 rounded-2xl p-3"
+      style={{ background: theme.surfaceSoft }}
     >
       <div style={{ color: c.amber }}>{icon}</div>
 
       <div className="min-w-0">
-        <p className="text-[11px]" style={{ color: c.textDim }}>
+        <p className="text-[11px]" style={{ color: theme.textDim }}>
           {label}
         </p>
 
-        <p className="text-xs font-semibold truncate">{value}</p>
+        <p className="truncate text-xs font-semibold">{value}</p>
       </div>
     </div>
   );
@@ -669,24 +789,26 @@ function MiniFeature({
   icon,
   title,
   text,
+  theme,
 }: {
   icon: React.ReactNode;
   title: string;
   text: string;
+  theme: ThemeColors;
 }) {
   return (
     <div
-      className="rounded-2xl p-4 border"
+      className="rounded-2xl border p-4"
       style={{
-        background: c.bg,
-        borderColor: c.border,
+        background: theme.surfaceSoft,
+        borderColor: theme.border,
       }}
     >
       <div style={{ color: c.amber }}>{icon}</div>
 
-      <h4 className="text-sm font-bold mt-3">{title}</h4>
+      <h4 className="mt-3 text-sm font-bold">{title}</h4>
 
-      <p className="text-xs mt-1" style={{ color: c.textDim }}>
+      <p className="mt-1 text-xs" style={{ color: theme.textDim }}>
         {text}
       </p>
     </div>

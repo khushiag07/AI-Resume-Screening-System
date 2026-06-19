@@ -65,8 +65,8 @@ export function Navbar({ activePage, onNavigate }: NavbarProps) {
 
   useEffect(() => {
     async function loadUser() {
-      const { data } = await supabase.auth.getSession();
-      const user = data.session?.user;
+      const { data } = await supabase.auth.getUser();
+const user = data.user;
 
       if (user) {
         setUserEmail(user.email || "");
@@ -143,7 +143,8 @@ export function Navbar({ activePage, onNavigate }: NavbarProps) {
   return (
     <nav style={{ fontFamily: FONT }} className="fixed top-0 left-0 right-0 z-50 h-16">
       <div
-        className="h-full flex items-center px-6 gap-0"
+     
+  className="hidden h-full items-center px-6 gap-0 lg:flex"
         style={{
           background: "rgba(7, 11, 19, 0.92)",
           backdropFilter: "blur(16px)",
@@ -193,7 +194,9 @@ export function Navbar({ activePage, onNavigate }: NavbarProps) {
                     boxShadow: isActive ? "0 0 16px rgba(245,158,11,0.3)" : "none",
                   }}
                 >
-                  {item.icon}
+                  <div className="scale-90">
+  {item.icon}
+</div>
                   {item.label}
 
                   {!isActive && (
@@ -367,7 +370,11 @@ export function Navbar({ activePage, onNavigate }: NavbarProps) {
                 }}
               >
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                 <img
+  src={`${avatarUrl}?v=${Date.now()}`}
+  alt="Profile"
+  className="w-full h-full object-cover"
+/>
                 ) : (
                   userInitial
                 )}
@@ -446,6 +453,42 @@ export function Navbar({ activePage, onNavigate }: NavbarProps) {
             )}
           </div>
         </div>
+      </div>
+           
+
+
+      {/* MOBILE NAV */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-2 lg:hidden"
+        style={{
+          background: "rgba(7, 11, 19, 0.96)",
+          backdropFilter: "blur(16px)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        {navItems.map((item) => {
+          const isActive = activePage === item.id;
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className="flex flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[9px]"
+              style={{
+                color: isActive ? "#F59E0B" : "#64748B",
+                fontWeight: isActive ? 700 : 500,
+              }}
+            >
+              <div className="scale-90">
+  {item.icon}
+</div>
+
+              <span>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </nav>
   );

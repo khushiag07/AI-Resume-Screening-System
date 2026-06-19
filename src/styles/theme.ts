@@ -2,31 +2,30 @@ export const FONT = "'Plus Jakarta Sans', sans-serif";
 export const MONO = "'DM Mono', monospace";
 
 export const c = {
-  bg: "#070B13",
-  surface: "#0D1220",
-  surfaceHover: "#111929",
+  bg: "var(--background)",
+  surface: "var(--card)",
+  surfaceHover: "var(--accent)",
 
-  border: "rgba(255,255,255,0.07)",
-  borderStrong: "rgba(255,255,255,0.12)",
+  text: "var(--foreground)",
+  textDim: "var(--muted-foreground)",
+  textMid: "var(--secondary-foreground)",
 
-  text: "#E8EDF5",
-  textMid: "#94A3B8",
-  textDim: "#475569",
+  border: "var(--border)",
+  borderStrong: "var(--border-strong)",
 
   amber: "#F59E0B",
   amberDim: "rgba(245,158,11,0.12)",
-  amberGlow: "rgba(245, 158, 11, 0.4)",
-
-  emerald: "#10B981",
-  emeraldDim: "rgba(16,185,129,0.12)",
-
-  red: "#F87171",
-  redDim: "rgba(248,113,113,0.10)",
-
-  yellow: "#FBBF24",
-  yellowDim: "rgba(251,191,36,0.10)",
+  amberGlow: "rgba(245,158,11,0.35)",
 
   indigo: "#818CF8",
   indigoDim: "rgba(129,140,248,0.12)",
 
+  emerald: "#34D399",
+  emeraldDim: "rgba(52,211,153,0.12)",
+
+  yellow: "#FACC15",
+  yellowDim: "rgba(250,204,21,0.12)",
+
+  red: "#FB7185",
+  redDim: "rgba(251,113,133,0.12)",
 };

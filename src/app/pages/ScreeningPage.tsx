@@ -8,6 +8,7 @@ type Resume = {
   name?: string;
   file_name?: string;
   file_url?: string;
+  storage_path?: string;
   job_id?: string | null;
   score?: number;
   matched_skills?: string;
@@ -58,82 +59,105 @@ export default function ScreeningPage() {
     }
   }
 
-  async function runAIScreening() {
-    if (!selectedJobId) {
-      alert("Please select a job first.");
-      return;
-    }
-
-    const selectedJob = jobs.find((job) => job.id === selectedJobId);
-
-    if (!selectedJob) {
-      alert("Selected job not found.");
-      return;
-    }
-
-    const resumesForJob = resumes.filter(
-      (resume) => resume.job_id === selectedJobId
-    );
-
-    if (resumesForJob.length === 0) {
-      alert("No resumes found for this job.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await fetch("http://localhost:8000/screen-resumes-ai", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          job_id: selectedJob.id,
-          job_title: selectedJob.title || selectedJob.role || "",
-          job_description: `${selectedJob.description || ""} ${
-            selectedJob.eligibility || ""
-          } ${selectedJob.skills || ""}`,
-          resumes: resumesForJob.map((resume) => ({
-            id: resume.id,
-            file_name: resume.file_name || "",
-            file_url: resume.file_url || "",
-          })),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Backend AI screening failed");
-      }
-
-      const data = await response.json();
-
-      for (const result of data.results) {
-        const { error } = await supabase
-          .from("resumes")
-          .update({
-            score: result.score,
-            matched_skills: result.matched_skills,
-            missing_skills: result.missing_skills,
-            analysis: result.analysis,
-            status: result.status,
-          })
-          .eq("id", result.id);
-
-        if (error) {
-          console.error("Supabase update error:", error.message);
-        }
-      }
-
-      await fetchData();
-      alert("AI Screening completed successfully.");
-    } catch (error) {
-      console.error("AI Screening error:", error);
-      alert("AI Screening failed. Please check backend.");
-    } finally {
-      setLoading(false);
-    }
+async function runAIScreening() {
+  if (!selectedJobId) {
+    alert("Please select a job first.");
+    return;
   }
+
+  const selectedJob = jobs.find((job) => job.id === selectedJobId);
+
+  if (!selectedJob) {
+    alert("Selected job not found.");
+    return;
+  }
+
+  const resumesForJob = resumes.filter(
+    (resume) => resume.job_id === selectedJobId
+  );
+
+  if (resumesForJob.length === 0) {
+    alert("No resumes found for this job.");
+    return;
+  }
+
+  const resumesWithUrls = resumesForJob.map((resume) => {
+    let finalUrl = resume.file_url || "";
+
+    if (!finalUrl && resume.storage_path) {
+      const { data } = supabase.storage
+        .from("resumes")
+        .getPublicUrl(resume.storage_path);
+
+      finalUrl = data.publicUrl;
+    }
+
+    return {
+      id: resume.id,
+      file_name: resume.file_name || "",
+      file_url: finalUrl,
+    };
+  });
+
+  const missingUrl = resumesWithUrls.some((resume) => !resume.file_url);
+
+  if (missingUrl) {
+    alert("Some resumes do not have file URLs. Check Supabase storage path.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const response = await fetch("http://localhost:8000/screen-resumes-ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        job_id: selectedJob.id,
+        job_title: selectedJob.title || selectedJob.role || "",
+        job_description: `${selectedJob.description || ""} ${
+          selectedJob.eligibility || ""
+        } ${selectedJob.skills || ""}`,
+        resumes: resumesWithUrls,
+      }),
+    });
+
+    const data = await response.json();
+
+    console.log("AI backend response:", data);
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Backend AI screening failed");
+    }
+
+    for (const result of data.results) {
+      const { error } = await supabase
+        .from("resumes")
+        .update({
+          score: result.score,
+          matched_skills: result.matched_skills,
+          missing_skills: result.missing_skills,
+          analysis: result.analysis,
+          status: result.status,
+        })
+        .eq("id", result.id);
+
+      if (error) {
+        console.error("Supabase update error:", error.message);
+      }
+    }
+
+    await fetchData();
+    alert("AI Screening completed successfully.");
+  } catch (error) {
+    console.error("AI Screening error:", error);
+    alert("AI Screening failed. Open console/backend terminal.");
+  } finally {
+    setLoading(false);
+  }
+}
 
   const filteredResumes = useMemo(() => {
     return resumes.filter((resume) => {
@@ -151,7 +175,7 @@ export default function ScreeningPage() {
 
   return (
     <div
-      className="min-h-screen px-8 py-8"
+      className="min-h-screen w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-8"
       style={{
         fontFamily: FONT,
         color: c.text,
@@ -182,7 +206,7 @@ export default function ScreeningPage() {
         <button
           onClick={runAIScreening}
           disabled={loading}
-          className="flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold"
+          className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold sm:w-auto"
           style={{
             background: c.amber,
             color: "#050505",

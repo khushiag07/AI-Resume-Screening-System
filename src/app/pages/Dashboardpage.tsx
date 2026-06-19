@@ -98,13 +98,13 @@ export default function DashboardPage({
 
   return (
 
-    <div className="space-y-8">
+    <div className="min-h-screen w-full space-y-6 px-4 py-5 pb-24 sm:px-6 lg:px-8 lg:py-8 lg:pb-8">
       <div>
         <h1
           style={{
             color: c.text,
             fontFamily: FONT,
-            fontSize: "22px",
+            fontSize: "clamp(20px, 5vw, 22px)",
             fontWeight: 700,
             letterSpacing: "-0.3px",
           }}
@@ -124,12 +124,15 @@ export default function DashboardPage({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {statsCards.map((s) => (
-          <Card key={s.label} className="p-5 flex flex-col gap-4">
+       <Card 
+  key={s.label}
+  className="p-3 sm:p-5 flex flex-col gap-3"
+>
             <div className="flex items-center justify-between">
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center"
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{ background: s.dimColor, color: s.color }}
               >
                 {s.icon}
@@ -142,7 +145,7 @@ export default function DashboardPage({
               <p
                 style={{
                   fontFamily: MONO,
-                  fontSize: "24px",
+                  fontSize: "clamp(18px, 4vw, 24px)",
                   fontWeight: 500,
                   color: c.text,
                   letterSpacing: "-0.5px",
@@ -172,7 +175,7 @@ export default function DashboardPage({
 
       <Card>
         <div
-          className="flex items-center justify-between px-6 py-4"
+          className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
           style={{ borderBottom: `1px solid ${c.border}` }}
         >
           <span
@@ -199,12 +202,14 @@ export default function DashboardPage({
               fontSize: "12px",
               fontFamily: FONT,
               outline: "none",
-              width: "220px",
+              width: "100%",
+              maxWidth: "220px",
             }}
           />
         </div>
 
-        <table className="w-full">
+        <div className="w-full overflow-x-auto">
+  <table className="min-w-[760px] w-full">
           <thead>
             <tr style={{ background: "rgba(0,0,0,0.2)" }}>
               {["Candidate", "Role Tag", "AI Match %", "Status", "Time", ""].map(
@@ -328,7 +333,9 @@ export default function DashboardPage({
               ))
             )}
           </tbody>
+        
         </table>
+        </div>
       </Card>
     </div>
   );

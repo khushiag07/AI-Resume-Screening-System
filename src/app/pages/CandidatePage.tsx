@@ -64,13 +64,13 @@ export default function CandidatePage({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24 lg:pb-8">
       <div>
         <h1
           style={{
             color: c.text,
             fontFamily: FONT,
-            fontSize: "22px",
+            fontSize: "clamp(20px, 5vw, 22px)",
             fontWeight: 700,
             letterSpacing: "-0.3px",
           }}
@@ -90,12 +90,15 @@ export default function CandidatePage({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {candidateStats.map((s) => (
-          <Card key={s.label} className="p-5 flex flex-col gap-4">
+          <Card 
+ key={s.label}
+ className="p-3 sm:p-5 flex flex-col gap-3"
+>
             <div className="flex items-center justify-between">
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center"
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{ background: s.dimColor, color: s.color }}
               >
                 {s.icon}
@@ -106,7 +109,7 @@ export default function CandidatePage({
               <p
                 style={{
                   fontFamily: MONO,
-                  fontSize: "24px",
+                  fontSize: "clamp(18px,4vw,24px)",
                   fontWeight: 500,
                   color: c.text,
                   letterSpacing: "-0.5px",
@@ -142,14 +145,14 @@ export default function CandidatePage({
           </p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {allCandidates.map((candidate, index) => (
             <Card
               key={`${candidate.name}-${candidate.fileName || index}`}
-              className="p-5 transition-all duration-150"
+              className="p-4 sm:p-5 transition-all duration-150"
               style={{ background: c.surface }}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 overflow-hidden">
                 <Avatar>
                   <AvatarFallback>
                     {candidate.name
@@ -205,7 +208,7 @@ export default function CandidatePage({
                           ? c.amber
                           : c.red,
                       fontFamily: MONO,
-                      fontSize: "24px",
+                      fontSize: "clamp(18px,4vw,24px)",
                       fontWeight: 600,
                     }}
                   >
