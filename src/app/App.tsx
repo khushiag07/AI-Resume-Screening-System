@@ -239,14 +239,15 @@ export default function App() {
     >
       <Navbar activePage={activePage} onNavigate={setActivePage} />
 
-      <main className="pt-16">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          
-          {pages[activePage] ?? (
-            <DashboardPage uploadedCandidates={uploadedCandidates} />
-          )}
-        </div>
-      </main>
+<main className="pt-16 max-sm:pt-20 max-sm:pb-24">
+  <div className="max-w-7xl mx-auto px-6 py-8 max-sm:px-3 max-sm:py-4">
+    
+
+    {pages[activePage] ?? (
+      <DashboardPage uploadedCandidates={uploadedCandidates} />
+    )}
+  </div>
+</main>
     </div>
   );
 }

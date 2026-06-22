@@ -144,7 +144,14 @@ const user = data.user;
     <nav style={{ fontFamily: FONT }} className="fixed top-0 left-0 right-0 z-50 h-16">
       <div
      
-  className="hidden h-full items-center px-6 gap-0 lg:flex"
+className="
+hidden h-full items-center px-6 gap-0 lg:flex
+
+max-lg:flex
+max-lg:h-16
+max-lg:px-4
+max-lg:justify-between
+"
         style={{
           background: "rgba(7, 11, 19, 0.92)",
           backdropFilter: "blur(16px)",
@@ -174,7 +181,7 @@ const user = data.user;
 
         <div className="h-5 w-px mx-4 shrink-0" style={{ background: "rgba(255,255,255,0.08)" }} />
 
-        <div className="flex items-center gap-0.5 flex-1">
+       <div className="hidden lg:flex items-center gap-0.5 flex-1">
           {navItems.map((item) => {
             const isActive = activePage === item.id;
 
@@ -243,8 +250,8 @@ const user = data.user;
           })}
         </div>
 
-        <div className="flex items-center gap-1.5 ml-4">
-          <div className="relative flex items-center">
+       <div className="flex items-center gap-1.5 ml-4 max-sm:gap-1">
+          <div className="relative hidden lg:flex items-center">
             {searchOpen ? (
               <div
                 className="flex items-center gap-2 rounded-lg px-3 py-1.5 w-52 transition-all"

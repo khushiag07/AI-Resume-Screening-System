@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { fileURLToPath } from "node:url";
 
 export default function JobDetailsPage({
   job,
@@ -157,6 +158,7 @@ export default function JobDetailsPage({
           eligibility: job.eligibility,
           location: job.location,
           fileName: resume.fileName,
+          fileURL:resume.fileUrl,
         });
       }
 
@@ -223,16 +225,26 @@ export default function JobDetailsPage({
                 <div>
                   <p>{resume.fileName}</p>
 
-                  {resume.fileUrl && (
-                    <a
-                      href={resume.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-amber-400"
-                    >
-                      View Resume
-                    </a>
-                  )}
+                 {resume.fileUrl && (
+  <div className="mt-2 flex gap-3">
+    <a
+      href={resume.fileUrl}
+      target="_blank"
+      rel="noreferrer"
+      className="text-sm text-amber-400"
+    >
+      View Resume
+    </a>
+
+    <a
+      href={resume.fileUrl}
+      download={resume.fileName}
+      className="text-sm text-green-400"
+    >
+      Download
+    </a>
+  </div>
+)}
 
                   <p className="text-sm text-gray-400">{resume.status}</p>
                 </div>

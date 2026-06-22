@@ -120,7 +120,7 @@ export default function DashboardPage({
             marginTop: "4px",
           }}
         >
-          Welcome back, Alex. Here's what's happening today.
+          Welcome back. Here's what's happening today.
         </p>
       </div>
 

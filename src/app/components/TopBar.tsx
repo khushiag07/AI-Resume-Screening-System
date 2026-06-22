@@ -51,154 +51,74 @@ export default function TopBar() {
   }
 
 
-  return (
-    <header
-      className="
-      mb-6
-      flex
-      items-center
-      justify-between
-      rounded-2xl
-      border
-      px-5
-      py-3
+return (
+  <header
+    className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-5 py-3 max-sm:px-3 max-sm:py-3"
+    style={{
+      background: c.surface,
+      borderColor: c.border,
+      fontFamily: FONT,
+    }}
+  >
+    {/* LEFT */}
+    <div className="min-w-0">
+      <div
+        className="flex items-center gap-2 text-sm font-bold"
+        style={{ color: c.text }}
+      >
+        <Sparkles size={17} style={{ color: c.amber }} />
+        ResumeAI
+      </div>
 
-      max-sm:px-4
-      "
-      style={{
-        background: c.surface,
-        borderColor: c.border,
-        fontFamily: FONT,
-      }}
-    >
+      <p
+        className="mt-0.5 text-xs max-sm:text-[10px]"
+        style={{ color: c.textDim }}
+      >
+        AI Powered Resume Screening Platform
+      </p>
+    </div>
 
-
-      {/* LEFT */}
-
-      <div>
-        <div
-          className="flex items-center gap-2 text-sm font-bold"
-          style={{ color: c.text }}
-        >
-          <Sparkles
-            size={17}
-            style={{ color: c.amber }}
+    {/* RIGHT PROFILE */}
+    <div className="flex items-center gap-2">
+      <div
+        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-xs font-bold"
+        style={{
+          background: c.amberDim,
+          color: c.amber,
+        }}
+      >
+        {user.avatar ? (
+          <img
+            src={`${user.avatar}?v=${Date.now()}`}
+            className="h-full w-full object-cover"
           />
+        ) : (
+          user.name[0]
+        )}
+      </div>
 
-          ResumeAI
-        </div>
+      <div className="block max-sm:hidden">
+        <p className="text-sm font-semibold" style={{ color: c.text }}>
+          {user.name}
+        </p>
 
-
-        <p
-          className="
-          mt-0.5
-          text-xs
-          max-sm:hidden
-          "
-          style={{
-            color: c.textDim,
-          }}
-        >
-          AI Powered Resume Screening Platform
+        <p className="max-w-[170px] truncate text-xs" style={{ color: c.textDim }}>
+          {user.email}
         </p>
       </div>
 
-
-
-      {/* RIGHT PROFILE */}
-
-
-      <div className="flex items-center gap-3">
-
-        <div
-          className="
-          flex
-          h-10
-          w-10
-          items-center
-          justify-center
-          overflow-hidden
-          rounded-full
-          text-sm
-          font-bold
-          "
-          style={{
-            background: c.amberDim,
-            color: c.amber,
-          }}
-        >
-
-          {user.avatar ? (
-
-            <img
-              src={`${user.avatar}?v=${Date.now()}`}
-              className="
-              h-full
-              w-full
-              object-cover
-              "
-            />
-
-          ) : (
-
-            user.name[0]
-
-          )}
-
-        </div>
-
-
-        <div className="hidden sm:block">
-
-          <p
-            className="text-sm font-semibold"
-            style={{
-              color:c.text,
-            }}
-          >
-            {user.name}
-          </p>
-
-
-          <p
-            className="text-xs"
-            style={{
-              color:c.textDim,
-            }}
-          >
-            {user.email}
-          </p>
-
-        </div>
-
-
-        <button
-          onClick={logout}
-          className="
-          flex
-          items-center
-          gap-2
-          rounded-xl
-          px-3
-          py-2
-          text-xs
-          font-semibold
-          "
-          style={{
-            background:c.amber,
-            color:"#111827",
-          }}
-        >
-
-          <LogOut size={14}/>
-
-          Logout
-
-        </button>
-
-      </div>
-
-
-    </header>
-  );
+      <button
+        onClick={logout}
+        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold max-sm:px-2"
+        style={{
+          background: c.amber,
+          color: "#111827",
+        }}
+      >
+        <LogOut size={14} />
+        <span className="max-sm:hidden">Logout</span>
+      </button>
+    </div>
+  </header>
+);
 }

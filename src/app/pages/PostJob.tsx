@@ -7,6 +7,7 @@ type UploadedResume = {
   fileName: string;
   status: "Ready" | "Screened";
   score?: number;
+  fileUrl?: string;
 };
 
 export type Job = {

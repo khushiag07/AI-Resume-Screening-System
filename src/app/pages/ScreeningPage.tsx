@@ -362,6 +362,24 @@ async function runAIScreening() {
                     : "Not Screened"}
                 </div>
               </div>
+              {resume.file_url && (
+  <div className="mt-4 flex flex-wrap gap-3">
+    <button
+      onClick={() => window.open(resume.file_url, "_blank")}
+      className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-white"
+    >
+      View Resume
+    </button>
+
+    <a
+      href={resume.file_url}
+      download={resume.file_name || "resume"}
+      className="rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-black"
+    >
+      Download
+    </a>
+  </div>
+)}
 
               <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div

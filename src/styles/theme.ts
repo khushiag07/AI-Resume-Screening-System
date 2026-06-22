@@ -28,4 +28,7 @@ export const c = {
 
   red: "#FB7185",
   redDim: "rgba(251,113,133,0.12)",
+  card: "#0D1220",
+surface2: "#111827",
+muted: "#94A3B8",
 };

@@ -23,6 +23,7 @@ type Candidate = {
   location?: string;
 };
 
+
 type CandidatePageProps = {
   uploadedCandidates: Candidate[];
 };
