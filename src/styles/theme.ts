@@ -2,16 +2,16 @@ export const FONT = "'Plus Jakarta Sans', sans-serif";
 export const MONO = "'DM Mono', monospace";
 
 export const c = {
-  bg: "var(--background)",
-  surface: "var(--card)",
-  surfaceHover: "var(--accent)",
+  bg: "#070B13",
+  surface: "#0D1220",
+  surfaceHover: "rgba(255,255,255,0.05)",
 
-  text: "var(--foreground)",
-  textDim: "var(--muted-foreground)",
-  textMid: "var(--secondary-foreground)",
+  text: "#E8EDF5",
+  textDim: "#94A3B8",
+  textMid: "#CBD5E1",
 
-  border: "var(--border)",
-  borderStrong: "var(--border-strong)",
+  border: "rgba(255,255,255,0.08)",
+  borderStrong: "rgba(255,255,255,0.16)",
 
   amber: "#F59E0B",
   amberDim: "rgba(245,158,11,0.12)",

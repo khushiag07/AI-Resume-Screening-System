@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
-import TopBar from "./components/TopBar";
 import { Navbar } from "./components/Navbar";
 import AuthPage from "./pages/AuthPage";
+
 
 import PostJob, { Job } from "./pages/PostJob";
 import DashboardPage from "./pages/Dashboardpage";
@@ -57,15 +57,7 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
-  useEffect(() => {
-  const savedTheme = localStorage.getItem("theme");
 
-  if (savedTheme === "dark") {
-    document.documentElement.classList.add("dark");
-  } else {
-    document.documentElement.classList.remove("dark");
-  }
-}, []);
 
   useEffect(() => {
     if (session) {
@@ -249,7 +241,7 @@ export default function App() {
 
       <main className="pt-16">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <TopBar page={activePage}/>
+          
           {pages[activePage] ?? (
             <DashboardPage uploadedCandidates={uploadedCandidates} />
           )}

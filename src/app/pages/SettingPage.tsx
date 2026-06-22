@@ -3,7 +3,6 @@ import {
   Bell,
   Shield,
   User,
-  Palette,
   Database,
   Save,
   Eye,
@@ -54,38 +53,12 @@ export default function SettingsPage() {
   const [resumeUploadAlerts, setResumeUploadAlerts] = useState(true);
   const [weeklyReports, setWeeklyReports] = useState(false);
 
-const [darkMode, setDarkMode] = useState(() => {
-
-  const savedTheme =
-  localStorage.getItem(
-    "resumeai-theme"
-  );
-
-
-  if(!savedTheme){
-    localStorage.setItem(
-      "resumeai-theme",
-      "dark"
-    );
-
-    document.documentElement.classList.add(
-      "dark"
-    );
-
-    return true;
-  }
-
-
-  return savedTheme === "dark";
-
-});
-
   const [autoShortlist, setAutoShortlist] = useState(true);
   const [showBiasFlags, setShowBiasFlags] = useState(true);
   const [anonymizeCandidates, setAnonymizeCandidates] = useState(false);
   const [saveScreeningHistory, setSaveScreeningHistory] = useState(true);
   const [minScore, setMinScore] = useState(70);
-
+const darkMode = true;
   const theme: ThemeColors = darkMode
     ? {
         bg: c.bg,
@@ -111,23 +84,7 @@ const [darkMode, setDarkMode] = useState(() => {
   useEffect(() => {
     loadUser();
   }, []);
-useEffect(() => {
-  if (darkMode) {
-    document.documentElement.classList.add("dark");
 
-    localStorage.setItem(
-      "resumeai-theme",
-      "dark"
-    );
-  } else {
-    document.documentElement.classList.remove("dark");
-
-    localStorage.setItem(
-      "resumeai-theme",
-      "light"
-    );
-  }
-}, [darkMode]);
 
   const loadUser = async () => {
     setLoading(true);
@@ -573,24 +530,7 @@ useEffect(() => {
               </div>
             </Card>
 
-            <Card
-              icon={<Palette size={20} />}
-              title="Appearance"
-              description="Control dashboard display preference."
-              theme={theme}
-            >
-              <ToggleRow
-                title="Dark Mode"
-                description={
-                  darkMode
-                    ? "Dark professional dashboard theme is active."
-                    : "Light dashboard theme is active."
-                }
-                checked={darkMode}
-                onChange={setDarkMode}
-                theme={theme}
-              />
-            </Card>
+           
 
             <Card
               icon={<Database size={20} />}
