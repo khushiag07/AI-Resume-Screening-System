@@ -65,7 +65,18 @@ if (error) {
 
     setLoading(false);
   }
+async function signInWithGoogle() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin,
+    },
+  });
 
+  if (error) {
+    alert(error.message);
+  }
+}
   return (
     <div
       className="min-h-screen flex items-center justify-center px-6"
@@ -176,6 +187,26 @@ if (error) {
               ? "Login"
               : "Create Account"}
           </button>
+          <div className="flex items-center gap-3">
+  <div className="h-px flex-1 bg-white/10" />
+  <span className="text-xs" style={{ color: c.textDim }}>
+    OR
+  </span>
+  <div className="h-px flex-1 bg-white/10" />
+</div>
+
+<button
+  type="button"
+  onClick={signInWithGoogle}
+  className="w-full rounded-2xl border py-3 text-sm font-bold transition"
+  style={{
+    borderColor: c.border,
+    color: c.text,
+    background: c.bg,
+  }}
+>
+  Continue with Google
+</button>
         </form>
 
         <button
