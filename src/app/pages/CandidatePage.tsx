@@ -8,6 +8,7 @@ import { Card } from "../components/ui/card";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 
 type Candidate = {
+  id?: string | number;
   name: string;
   role: string;
   score: number;
@@ -55,7 +56,7 @@ export default function CandidatePage({
     {
       label: "Under Review",
       value: allCandidates.filter(
-        (candidate) => candidate.status === "Review"
+        (candidate) => candidate.status === "Needs Review"
       ).length,
       delta: "needs checking",
       icon: <CircleDot size={18} />,
@@ -149,7 +150,7 @@ export default function CandidatePage({
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {allCandidates.map((candidate, index) => (
             <Card
-              key={`${candidate.name}-${candidate.fileName || index}`}
+              key={`${candidate.id || candidate.fileName || candidate.name}-${index}`}
               className="p-4 sm:p-5 transition-all duration-150"
               style={{ background: c.surface }}
             >

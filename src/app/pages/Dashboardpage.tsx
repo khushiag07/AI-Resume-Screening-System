@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Users,
   Briefcase,
@@ -8,7 +8,7 @@ import {
   ArrowUpRight,
   Zap,
 } from "lucide-react";
-
+import { supabase } from "../../lib/supabase";
 import { c, FONT, MONO } from "../../styles/theme";
 import { recentCandidates } from "../../data/Candidate";
 import { scoreDisplay } from "../utils/helpers";
@@ -17,6 +17,7 @@ import { Card } from "../components/ui/card";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 
 type Candidate = {
+  id?: string | number;
   name: string;
   role: string;
   score: number;
@@ -33,11 +34,10 @@ export default function DashboardPage({
   uploadedCandidates,
 }: DashboardPageProps) {
   const [searchText, setSearchText] = useState("");
+  const [jobsCount, setJobsCount] = useState(0);
+const [ dashboardCandidates,setDashboardCandidates] = useState<Candidate[]>([]);
 
-  const dashboardCandidates: Candidate[] = [
-    ...uploadedCandidates,
-    ...(recentCandidates as Candidate[]),
-  ];
+ 
 
   const filteredCandidates = dashboardCandidates.filter((candidate) => {
     const query = searchText.trim().toLowerCase();
@@ -55,7 +55,7 @@ export default function DashboardPage({
   const statsCards = [
     {
       label: "Active Jobs",
-      value: "24",
+      value: jobsCount.toString(),
       delta: "+3 this week",
       icon: <Briefcase size={18} />,
       color: c.indigo,
@@ -95,6 +95,41 @@ export default function DashboardPage({
       dimColor: "rgba(192,132,252,0.12)",
     },
   ];
+  useEffect(() => {
+  fetchDashboardData();
+}, []);
+
+async function fetchDashboardData() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  const { data: jobsData } = await supabase
+    .from("jobs")
+    .select("id")
+    .eq("user_id", user.id);
+
+  const { data: resumesData } = await supabase
+    .from("resumes")
+    .select("file_name, score, status, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  setJobsCount(jobsData?.length || 0);
+
+  setDashboardCandidates(
+    (resumesData || []).map((resume: any) => ({
+      name: resume.file_name || "Unnamed Resume",
+      role: "Uploaded Resume",
+      score: resume.score || 0,
+      status: resume.status || "Ready",
+      time: "Recent",
+      fileName: resume.file_name,
+    }))
+  );
+}
 
   return (
 
@@ -251,9 +286,7 @@ export default function DashboardPage({
             ) : (
               filteredCandidates.map((candidate, index) => (
                 <tr
-                  key={`${candidate.name}-${candidate.role}-${
-                    candidate.fileName || index
-                  }`}
+                key={`${candidate.id || candidate.fileName || candidate.name}-${index}`}
                   style={{ borderTop: `1px solid ${c.border}` }}
                   className="transition-colors"
                   onMouseEnter={(e) => {

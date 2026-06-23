@@ -13,6 +13,11 @@ import {
   Camera,
   Trash2,
 } from "lucide-react";
+import {
+  CreditCard,
+  Zap,
+  Crown,
+} from "lucide-react";
 
 import { c, FONT } from "../../styles/theme";
 import { supabase } from "../../lib/supabase";
@@ -247,6 +252,7 @@ const darkMode = true;
         fontFamily: FONT,
       }}
     >
+      
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -568,6 +574,7 @@ const darkMode = true;
   );
 }
 
+
 function Card({
   icon,
   title,
@@ -737,6 +744,7 @@ function MiniFeature({
   theme: ThemeColors;
 }) {
   return (
+    
     <div
       className="rounded-2xl border p-4"
       style={{

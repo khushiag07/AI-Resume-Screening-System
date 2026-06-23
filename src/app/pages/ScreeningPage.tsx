@@ -15,6 +15,7 @@ type Resume = {
   missing_skills?: string;
   analysis?: string;
   status?: string;
+  candidate_email?: string;
 };
 
 type Job = {
@@ -26,7 +27,25 @@ type Job = {
   skills?: string;
 };
 
-export default function ScreeningPage() {
+type Candidate = {
+  id?: string | number;
+  name: string;
+  role: string;
+  score: number;
+  status: string;
+  time?: string;
+  fileName?: string;
+  matchedSkills?: string[];
+  missingSkills?: string[];
+  semanticScore?: number;
+  keywordScore?: number;
+};
+
+type ScreeningPageProps = {
+  onScreeningComplete?: (results: Candidate[]) => void;
+};
+
+export default function ScreeningPage({ onScreeningComplete }: ScreeningPageProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [selectedJobId, setSelectedJobId] = useState("");
@@ -37,28 +56,47 @@ export default function ScreeningPage() {
     fetchData();
   }, []);
 
-  async function fetchData() {
-    const { data: jobsData, error: jobsError } = await supabase
-      .from("jobs")
-      .select("*")
-      .order("created_at", { ascending: false });
+async function fetchData() {
 
-    const { data: resumesData, error: resumesError } = await supabase
-      .from("resumes")
-      .select("*")
-      .order("created_at", { ascending: false });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (jobsError) console.error("Jobs error:", jobsError.message);
-    if (resumesError) console.error("Resumes error:", resumesError.message);
 
-    setJobs(jobsData || []);
-    setResumes(resumesData || []);
+  if (!user) return;
 
-    if (jobsData && jobsData.length > 0 && !selectedJobId) {
-      setSelectedJobId(jobsData[0].id);
-    }
+
+  const { data: jobsData, error: jobsError } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+
+  const { data: resumesData, error: resumesError } = await supabase
+    .from("resumes")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+
+  if (jobsError) {
+    console.error("Jobs error:", jobsError.message);
   }
 
+  if (resumesError) {
+    console.error("Resumes error:", resumesError.message);
+  }
+
+
+  setJobs(jobsData || []);
+  setResumes(resumesData || []);
+
+
+  if (jobsData && jobsData.length > 0 && !selectedJobId) {
+    setSelectedJobId(jobsData[0].id);
+  }
+}
 async function runAIScreening() {
   if (!selectedJobId) {
     alert("Please select a job first.");
@@ -148,6 +186,27 @@ async function runAIScreening() {
         console.error("Supabase update error:", error.message);
       }
     }
+    const candidateResults: Candidate[] = data.results.map((result: any) => {
+  const originalResume = resumesForJob.find((r) => r.id === result.id);
+
+  return {
+    id: result.id,
+    name: originalResume?.name || originalResume?.file_name || "Unnamed Candidate",
+    role: selectedJob.title || selectedJob.role || "Candidate",
+    score: result.score,
+    status: result.status,
+    fileName: originalResume?.file_name || "",
+    matchedSkills: result.matched_skills
+      ? result.matched_skills.split(",").map((s: string) => s.trim())
+      : [],
+    missingSkills: result.missing_skills
+      ? result.missing_skills.split(",").map((s: string) => s.trim())
+      : [],
+    time: new Date().toLocaleString(),
+  };
+});
+
+onScreeningComplete?.(candidateResults);
 
     await fetchData();
     alert("AI Screening completed successfully.");
@@ -198,8 +257,9 @@ async function runAIScreening() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm" style={{ color: c.textDim }}>
-            Select a job, run AI screening, and save real match scores, matched
-            skills, missing skills, and AI analysis into Supabase.
+            Select a job, run AI screening, and  match scores, matched
+            Select a job, run AI screening, and Can View match scores, matched
+            skills, missing skills, and AI analysis 
           </p>
         </div>
 
@@ -374,10 +434,32 @@ async function runAIScreening() {
     <a
       href={resume.file_url}
       download={resume.file_name || "resume"}
-      className="rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-black"
+      className="rounded-xl bg-black-500 px-4 py-2 text-xs font-semibold text-white"
     >
       Download
     </a>
+<button
+  onClick={() => {
+    const subject = encodeURIComponent("Interview Opportunity");
+
+    const body = encodeURIComponent(`Hello,
+
+Your resume has been shortlisted.
+
+We would like to continue with the next step of our hiring process.
+
+Regards,
+Recruitment Team`);
+
+    window.open(
+      `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`,
+      "_blank"
+    );
+  }}
+  className="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white"
+>
+  Send Email
+</button>
   </div>
 )}
 

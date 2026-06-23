@@ -1,13 +1,14 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
+from pypdf.errors import PdfStreamError
 from docx import Document
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
+from pydantic import BaseModel
 from io import BytesIO
 from datetime import datetime
-from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
 import requests
 import re
 
@@ -21,56 +22,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-JOB_ROLES = {
-    "Frontend Developer": "react javascript typescript html css tailwind frontend ui component",
-    "Data Analyst": "python sql power bi excel pandas numpy data analysis statistics",
-    "Backend Developer": "node express api database mongodb sql server authentication",
-}
-
-SKILLS = [
-    "python", "java", "javascript", "typescript", "react", "html", "css",
-    "tailwind", "node", "express", "mongodb", "sql", "mysql",
-    "pandas", "numpy", "power bi", "excel", "machine learning",
-    "deep learning", "nlp", "scikit-learn", "tensorflow", "django",
-    "flask", "fastapi", "git", "docker", "aws"
-]
 ai_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def extract_skills(text):
-    text = text.lower()
-    return [skill for skill in SKILLS if skill in text]
 
+@app.get("/")
+def home():
+    return {"message": "ResumeAI backend is running"}
 
-def extract_pdf_text(file_bytes):
-    reader = PdfReader(BytesIO(file_bytes))
-    text = ""
-
-    for page in reader.pages:
-        text += page.extract_text() or ""
-
-    return text
-
-
-def extract_docx_text(file_bytes):
-    doc = Document(BytesIO(file_bytes))
-    return "\n".join([p.text for p in doc.paragraphs])
-
-
-def get_best_role(resume_text):
-    best_role = "General Candidate"
-    best_score = 0
-
-    for role, job_text in JOB_ROLES.items():
-        vectorizer = TfidfVectorizer()
-        vectors = vectorizer.fit_transform([resume_text, job_text])
-        score = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
-        percent = round(score * 100)
-
-        if percent > best_score:
-            best_score = percent
-            best_role = role
-
-    return best_role, best_score
 
 class ResumeItem(BaseModel):
     id: str
@@ -85,18 +43,49 @@ class ScreenAIRequest(BaseModel):
     resumes: list[ResumeItem]
 
 
-def clean_text(text):
+def clean_text(text: str):
     text = text.lower()
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
 
-def extract_text_from_url(file_url, file_name=""):
-    response = requests.get(file_url)
-    response.raise_for_status()
+def extract_email(text: str):
+    match = re.search(
+        r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+",
+        text
+    )
+    return match.group(0) if match else ""
 
-    file_bytes = response.content
-    name = (file_name or file_url).lower()
+
+def extract_pdf_text(file_bytes):
+    try:
+        reader = PdfReader(BytesIO(file_bytes))
+        text = ""
+
+        for page in reader.pages:
+            text += page.extract_text() or ""
+
+        return text
+
+    except PdfStreamError:
+        return ""
+
+    except Exception as e:
+        print("PDF extraction error:", str(e))
+        return ""
+
+
+def extract_docx_text(file_bytes):
+    try:
+        doc = Document(BytesIO(file_bytes))
+        return "\n".join([p.text for p in doc.paragraphs])
+    except Exception as e:
+        print("DOCX extraction error:", str(e))
+        return ""
+
+
+def extract_text_from_file(file_bytes, file_name: str):
+    name = file_name.lower()
 
     if name.endswith(".pdf"):
         return extract_pdf_text(file_bytes)
@@ -107,7 +96,22 @@ def extract_text_from_url(file_url, file_name=""):
     return file_bytes.decode("utf-8", errors="ignore")
 
 
-def get_dynamic_keywords(job_text, resume_text):
+def extract_text_from_url(file_url: str, file_name: str = ""):
+    try:
+        response = requests.get(file_url, timeout=20)
+        response.raise_for_status()
+
+        file_bytes = response.content
+        return extract_text_from_file(file_bytes, file_name or file_url)
+
+    except Exception as e:
+        print("URL extraction error:", str(e))
+        return ""
+
+
+def extract_keywords_from_job(job_text: str):
+    job_text = clean_text(job_text)
+
     vectorizer = TfidfVectorizer(
         stop_words="english",
         ngram_range=(1, 2),
@@ -115,83 +119,126 @@ def get_dynamic_keywords(job_text, resume_text):
     )
 
     try:
-        vectorizer.fit_transform([job_text, resume_text])
+        vectorizer.fit_transform([job_text])
         keywords = vectorizer.get_feature_names_out()
-    except:
-        return [], []
+        return list(keywords)
+    except Exception:
+        return []
 
-    job_lower = job_text.lower()
-    resume_lower = resume_text.lower()
+
+def compare_keywords(job_keywords, resume_text: str):
+    resume_text = clean_text(resume_text)
 
     matched = []
     missing = []
 
-    for word in keywords:
-        if word in job_lower:
-            if word in resume_lower:
-                matched.append(word)
-            else:
-                missing.append(word)
+    for keyword in job_keywords:
+        if keyword.lower() in resume_text:
+            matched.append(keyword)
+        else:
+            missing.append(keyword)
 
-    return matched[:10], missing[:10]
+    return matched, missing
 
 
-@app.post("/screen-resumes-ai")
-def screen_resumes_ai(payload: ScreenAIRequest):
-    job_text = clean_text(
-        f"{payload.job_title or ''} {payload.job_description or ''}"
+def calculate_resume_score(job_text: str, resume_text: str):
+    job_text = clean_text(job_text)
+    resume_text = clean_text(resume_text)
+
+    if not job_text or not resume_text:
+        return {
+            "final_score": 0,
+            "semantic_score": 0,
+            "keyword_score": 0,
+            "matched_keywords": [],
+            "missing_keywords": [],
+            "status": "Rejected",
+            "analysis": "Unable to calculate score because resume or job description text is empty."
+        }
+
+    embeddings = ai_model.encode([job_text, resume_text])
+
+    semantic_similarity = cosine_similarity(
+        [embeddings[0]],
+        [embeddings[1]]
+    )[0][0]
+
+    semantic_score = round(float(semantic_similarity) * 100, 2)
+
+    job_keywords = extract_keywords_from_job(job_text)
+    matched_keywords, missing_keywords = compare_keywords(job_keywords, resume_text)
+
+    keyword_score = (
+        round((len(matched_keywords) / len(job_keywords)) * 100)
+        if job_keywords else 0
     )
 
-    results = []
+    final_score = round((semantic_score * 0.8) + (keyword_score * 0.2), 2)
 
-    for resume in payload.resumes:
-        resume_text = clean_text(
-            extract_text_from_url(resume.file_url, resume.file_name or "")
-        )
+    if final_score >= 70:
+        status = "Shortlisted"
+        recommendation = "Strong candidate. Recommended for interview."
+    elif final_score >= 45:
+        status = "Needs Review"
+        recommendation = "Average match. Recruiter should review manually."
+    else:
+        status = "Rejected"
+        recommendation = "Low match for this role."
 
-        embeddings = ai_model.encode([job_text, resume_text])
+    analysis = f"""
+AI Match Score: {final_score}%
 
-        similarity = cosine_similarity(
-            [embeddings[0]],
-            [embeddings[1]]
-        )[0][0]
+Semantic Score: {semantic_score}%
+Keyword Score: {keyword_score}%
 
-        score = round(float(similarity) * 100, 2)
-
-        matched, missing = get_dynamic_keywords(job_text, resume_text)
-
-        if score >= 70:
-            status = "Shortlisted"
-            recommendation = "Strong candidate. Recommended for interview."
-        elif score >= 45:
-            status = "Needs Review"
-            recommendation = "Average match. Recruiter should review manually."
-        else:
-            status = "Rejected"
-            recommendation = "Low match for this role."
-
-        analysis = f"""
-AI Semantic Match Score: {score}%
-
-This result is generated using sentence embeddings and cosine similarity between the job description and the resume.
+This score is calculated using:
+80% SentenceTransformer semantic similarity
+20% dynamic keyword matching from the job description
 
 Matched keywords:
-{", ".join(matched) if matched else "No strong matched keywords found"}
+{", ".join(matched_keywords) if matched_keywords else "No strong matched keywords found"}
 
 Missing or weak keywords:
-{", ".join(missing) if missing else "No major missing keywords detected"}
+{", ".join(missing_keywords) if missing_keywords else "No major missing keywords detected"}
 
 Recommendation:
 {recommendation}
 """
 
+    return {
+        "final_score": final_score,
+        "semantic_score": semantic_score,
+        "keyword_score": keyword_score,
+        "matched_keywords": matched_keywords,
+        "missing_keywords": missing_keywords,
+        "status": status,
+        "analysis": analysis.strip()
+    }
+
+
+@app.post("/screen-resumes-ai")
+def screen_resumes_ai(payload: ScreenAIRequest):
+    job_text = f"{payload.job_title or ''} {payload.job_description or ''}"
+
+    results = []
+
+    for resume in payload.resumes:
+        resume_text = extract_text_from_url(
+            resume.file_url,
+            resume.file_name or ""
+        )
+
+        score_data = calculate_resume_score(job_text, resume_text)
+
         results.append({
             "id": resume.id,
-            "score": score,
-            "status": status,
-            "matched_skills": ", ".join(matched),
-            "missing_skills": ", ".join(missing),
-            "analysis": analysis.strip()
+            "score": score_data["final_score"],
+            "semantic_score": score_data["semantic_score"],
+            "keyword_score": score_data["keyword_score"],
+            "status": score_data["status"],
+            "matched_skills": ", ".join(score_data["matched_keywords"]),
+            "missing_skills": ", ".join(score_data["missing_keywords"]),
+            "analysis": score_data["analysis"]
         })
 
     results.sort(key=lambda item: item["score"], reverse=True)
@@ -201,53 +248,29 @@ Recommendation:
         "results": results
     }
 
+
 @app.post("/scan-resume")
 async def scan_resume(
     file: UploadFile = File(...),
     job_description: str = Form(...)
 ):
     file_bytes = await file.read()
+    resume_text = extract_text_from_file(file_bytes, file.filename)
 
-    if file.filename.endswith(".pdf"):
-        resume_text = extract_pdf_text(file_bytes)
-    elif file.filename.endswith(".docx"):
-        resume_text = extract_docx_text(file_bytes)
-    else:
-        resume_text = file_bytes.decode("utf-8", errors="ignore")
-
-    vectorizer = TfidfVectorizer()
-    vectors = vectorizer.fit_transform([resume_text, job_description])
-
-    score = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
-    match_percent = round(score * 100)
-
-    jd_skills = extract_skills(job_description)
-    resume_skills = extract_skills(resume_text)
-
-    matched_skills = list(set(jd_skills) & set(resume_skills))
-    missing_skills = list(set(jd_skills) - set(resume_skills))
-
-    skill_score = round((len(matched_skills) / len(jd_skills)) * 100) if jd_skills else 0
-    final_score = round((match_percent * 0.6) + (skill_score * 0.4))
-
-    if final_score >= 70:
-        status = "Shortlisted"
-    elif final_score >= 60:
-        status = "Review"
-    else:
-        status = "Rejected"
-
-    role, _ = get_best_role(resume_text)
+    score_data = calculate_resume_score(job_description, resume_text)
+    email = extract_email(resume_text)
 
     return {
         "name": file.filename.replace(".pdf", "").replace(".docx", ""),
-        "role": role,
-        "score": final_score,
-        "status": status,
+        "role": "Candidate",
+        "score": score_data["final_score"],
+        "semanticScore": score_data["semantic_score"],
+        "keywordScore": score_data["keyword_score"],
+        "status": score_data["status"],
         "time": datetime.now().strftime("%d/%m/%Y, %I:%M %p"),
         "fileName": file.filename,
-        "matchedSkills": matched_skills,
-        "missingSkills": missing_skills,
-        "similarityScore": match_percent,
-        "skillScore": skill_score,
+        "matchedSkills": score_data["matched_keywords"],
+        "missingSkills": score_data["missing_keywords"],
+        "analysis": score_data["analysis"],
+        "email": email,
     }

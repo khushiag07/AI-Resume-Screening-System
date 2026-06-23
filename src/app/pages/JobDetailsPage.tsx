@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import { fileURLToPath } from "node:url";
+
 
 export default function JobDetailsPage({
   job,
@@ -25,15 +25,15 @@ export default function JobDetailsPage({
       return;
     }
 
-    setResumes(
-      (data || []).map((resume) => ({
-        id: resume.id,
-        fileName: resume.file_name,
-        fileUrl: resume.file_url,
-        fileType: resume.file_type,
-        status: resume.status || "Ready",
-      }))
-    );
+   setResumes(
+  (data || []).map((resume) => ({
+    id: resume.id,
+    fileName: resume.file_name,
+    fileUrl: resume.file_url,
+    fileType: resume.file_type,
+    status: resume.status || "Ready",
+  }))
+);
   };
 
   useEffect(() => {
@@ -88,89 +88,79 @@ export default function JobDetailsPage({
 
     setResumes((prev) => prev.filter((resume) => resume.id !== id));
   };
+const runScreening = async () => {
+  if (resumes.length === 0) return;
 
-  const runScreening = async () => {
-    if (resumes.length === 0) return;
+  setLoading(true);
 
-    setLoading(true);
+  try {
+    const results = [];
 
-    try {
-      const results = [];
-
-      for (const resume of resumes) {
-        const response = await fetch(resume.fileUrl);
-        const blob = await response.blob();
-        const file = new File([blob], resume.fileName, {
-          type: resume.fileType || "application/pdf",
-        });
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("job_description", job.description);
-
-        const scanResponse = await fetch("http://127.0.0.1:8000/scan-resume", {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await scanResponse.json();
-
-        const { data: candidateData, error: candidateError } = await supabase
-          .from("candidates")
-          .insert({
-            job_id: job.id,
-            name:
-              data.name ||
-              resume.fileName.replace(".pdf", "").replace(".docx", ""),
-            candidate_role: job.role,
-            status: data.status || "Review",
-            score: data.score || 0,
-          })
-          .select()
-          .single();
-
-        if (candidateError) {
-          console.log("Candidate save error:", candidateError.message);
-          continue;
-        }
-
-        await supabase
-          .from("resumes")
-          .update({
-            candidate_id: candidateData.id,
-            status: "Screened",
-          })
-          .eq("id", resume.id);
-
-        await supabase.from("resume_analysis").insert({
-          candidate_id: candidateData.id,
-          matched_skills: data.matchedSkills || [],
-          missing_skills: data.missingSkills || [],
-          similarity_score: data.similarityScore || 0,
-          skill_score: data.skillScore || 0,
-          ai_summary: data.summary || "",
-          recommendation: data.status || "Review",
-        });
-
-        results.push({
-          ...data,
-          jobRole: job.role,
-          eligibility: job.eligibility,
-          location: job.location,
-          fileName: resume.fileName,
-          fileURL:resume.fileUrl,
-        });
+    for (const resume of resumes) {
+      if (!resume.fileUrl) {
+        console.log("Missing file URL for:", resume.fileName);
+        continue;
       }
 
-      await fetchResumes();
-      onScreeningComplete(results);
-    } catch (error) {
-      console.error("Screening failed:", error);
-      alert("Screening failed. Make sure backend is running.");
-    } finally {
-      setLoading(false);
+      const response = await fetch(resume.fileUrl);
+      const blob = await response.blob();
+
+      const file = new File([blob], resume.fileName, {
+        type: resume.fileType || "application/pdf",
+      });
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("job_description", job.description || "");
+
+      const scanResponse = await fetch("http://127.0.0.1:8000/scan-resume", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!scanResponse.ok) {
+        const errorText = await scanResponse.text();
+        console.log("Backend error:", errorText);
+        continue;
+      }
+
+      const data = await scanResponse.json();
+
+      await supabase
+        .from("resumes")
+        .update({
+          status: data.status || "Needs Review",
+          score: data.score || 0,
+          matched_skills: data.matchedSkills || [],
+          missing_skills: data.missingSkills || [],
+          analysis: data.analysis || "",
+        })
+        .eq("id", resume.id);
+
+      results.push({
+        id: resume.id,
+        name: data.name || resume.fileName.replace(".pdf", "").replace(".docx", ""),
+        role: job.role || "Candidate",
+        score: data.score || 0,
+        status: data.status || "Needs Review",
+        fileName: resume.fileName,
+        matchedSkills: data.matchedSkills || [],
+        missingSkills: data.missingSkills || [],
+        semanticScore: data.semanticScore || 0,
+        keywordScore: data.keywordScore || 0,
+        time: data.time,
+      });
     }
-  };
+
+    await fetchResumes();
+    onScreeningComplete(results);
+  } catch (error) {
+    console.error("Screening failed:", error);
+    alert("Screening failed. Make sure backend is running.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="p-6 text-white">

@@ -18,6 +18,7 @@ import {
   Zap,
 } from "lucide-react";
 
+
 const FONT = "'Plus Jakarta Sans', sans-serif";
 
 type NavItem = {
@@ -425,7 +426,7 @@ max-lg:justify-between
                 <div className="py-1">
                   {[
                     { icon: <UserCircle size={14} />, label: "Account", page: "settings" },
-                    { icon: <CreditCard size={14} />, label: "Billing", page: "settings" },
+                    { icon: <CreditCard size={14} />, label: "Billing", page: "billing" },
                     { icon: <Settings size={14} />, label: "Settings", page: "settings" },
                   ].map((item) => (
                     <button

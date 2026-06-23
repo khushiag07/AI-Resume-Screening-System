@@ -3,7 +3,7 @@ import { Session } from "@supabase/supabase-js";
 import { Navbar } from "./components/Navbar";
 import AuthPage from "./pages/AuthPage";
 
-
+import BillingPage from "./pages/BillingPage";
 import PostJob, { Job } from "./pages/PostJob";
 import DashboardPage from "./pages/Dashboardpage";
 import CandidatePage from "./pages/CandidatePage";
@@ -21,12 +21,20 @@ const c = {
 };
 
 type Candidate = {
+  id?: string | number;
   name: string;
   role: string;
   score: number;
   status: string;
   time?: string;
   fileName?: string;
+  matchedSkills?: string[];
+  missingSkills?: string[];
+  semanticScore?: number;
+  keywordScore?: number;
+  jobRole?: string;
+  eligibility?: string;
+  location?: string;
 };
 
 export default function App() {
@@ -57,15 +65,17 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
+  
 
-
-  useEffect(() => {
+ useEffect(() => {
     if (session) {
       fetchJobs();
     }
   }, [session]);
 
   const fetchJobs = async () => {
+    if (!session?.user?.id) return;
+
     const { data, error } = await supabase
       .from("jobs")
       .select(`
@@ -86,6 +96,7 @@ export default function App() {
           )
         )
       `)
+      .eq("user_id", session.user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -208,8 +219,15 @@ export default function App() {
     ),
 
     candidates: <CandidatePage uploadedCandidates={uploadedCandidates} />,
-
-    screening: <ScreeningPage />,
+screening: (
+  <ScreeningPage
+    onScreeningComplete={(results: Candidate[]) => {
+      setUploadedCandidates(results);
+      setActivePage("candidates");
+    }}
+  />
+),
+billing: <BillingPage />,
 
     analytics: <AnalyticsPage />,
 

@@ -39,23 +39,36 @@ export default function PostJob({ onClose, onAddJob }: PostJobProps) {
     return;
   }
 
-  const { data, error } = await supabase
-    .from("jobs")
-    .insert({
-      title: role,
-      eligibility: eligibility,
-      location: location,
-      description: description,
-    })
-    .select()
-    .single();
+ const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-  if (error) {
-    console.log("Job save error:", error.message);
-    setError(error.message);
-    return;
-  }
+if (!user) {
+  setError("Please login first");
+  return;
+}
 
+
+const { data, error } = await supabase
+  .from("jobs")
+  .insert({
+    title: role,
+    eligibility: eligibility,
+    location: location,
+    description: description,
+
+    // connect job to logged in account
+    user_id: user.id,
+  })
+  .select()
+  .single();
+
+
+if (error) {
+  console.log("Job save error:", error.message);
+  setError(error.message);
+  return;
+}
   const newJob: Job = {
     id: data.id,
     role: data.title,

@@ -51,24 +51,34 @@ export default function AnalyticsPage() {
     fetchAnalytics();
   }, []);
 
-  async function fetchAnalytics() {
-    setLoading(true);
+ async function fetchAnalytics() {
+  setLoading(true);
 
-    const { data: jobData } = await supabase
-      .from("jobs")
-      .select("*")
-      .order("created_at", { ascending: false });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    const { data: resumeData } = await supabase
-      .from("resumes")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    setJobs(jobData || []);
-    setResumes(resumeData || []);
+  if (!user) {
     setLoading(false);
+    return;
   }
 
+  const { data: jobData } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const { data: resumeData } = await supabase
+    .from("resumes")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  setJobs(jobData || []);
+  setResumes(resumeData || []);
+  setLoading(false);
+}
   const totalJobs = jobs.length;
   const totalResumes = resumes.length;
 
