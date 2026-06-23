@@ -18,24 +18,24 @@ The system helps recruiters reduce manual screening time by automatically analyz
 
 Recruitment overview with candidate statistics and screening insights.
 
-![Dashboard](Screenshots/DashboardPage.png)
+![Dashboard](Screenshot/DashboardPage.png)
 
 
 ### AI Screening Engine
 
 Semantic resume analysis with AI-generated match scores, matched skills, missing skills, and recommendations.
 
-![Screening](Screenshots/AiScreeningPage.png)
+![Screening](Screenshot/AiScreeningPage.png)
 
 
 ### Candidate Intelligence
 
 Ranked candidates based on AI compatibility scores.
 
-![Candidates](Screenshots/CandidatePage.png)
+![Candidates](Screenshot/CandidatePage.png)
 
 ### Analytics Dashboard
-![Analytics](Screenshots/AnalyticsDashboardpage.png)
+![Analytics](Screenshot/AnalyticsDashboardpage.png)
 
 ---
 # 🧠 AI Screening Workflow
