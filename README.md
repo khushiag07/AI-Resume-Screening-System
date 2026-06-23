@@ -1,18 +1,5 @@
-## 📸 Product Preview
 
-### Dashboard
-![Dashboard](Screenshots/DashboardPage.png)
-
-### AI Screening
-![Screening](Screenshots/AiScreeningPage.png)
-
-### Candidate Ranking
-![Candidates](Screenshots/CandidatePage.png)
-
-### Analytics Dashboard
-![Analytics](Screenshots/AnalyticsDashboardpage.png)
-
-# HireFlow AI 🚀
+# Resume AI 🚀
 ## AI-Powered Resume Screening & Candidate Intelligence Platform
 
 HireFlow AI is a full-stack AI recruitment platform that automates resume screening using Natural Language Processing and transformer-based semantic matching.
@@ -31,26 +18,26 @@ The system helps recruiters reduce manual screening time by automatically analyz
 
 Recruitment overview with candidate statistics and screening insights.
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](Screenshots/DashboardPage.png)
 
 
 ### AI Screening Engine
 
 Semantic resume analysis with AI-generated match scores, matched skills, missing skills, and recommendations.
 
-![Screening](screenshots/screening.png)
+![Screening](Screenshots/AiScreeningPage.png)
 
 
 ### Candidate Intelligence
 
 Ranked candidates based on AI compatibility scores.
 
-![Candidates](screenshots/candidates.png)
+![Candidates](Screenshots/CandidatePage.png)
 
-
+### Analytics Dashboard
+![Analytics](Screenshots/AnalyticsDashboardpage.png)
 
 ---
-
 # 🧠 AI Screening Workflow
 
 
