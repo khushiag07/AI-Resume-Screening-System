@@ -10,7 +10,7 @@ export default function JobDetailsPage({
   onScreeningComplete,
 }: any) {
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const [loading, setLoading] = useState(false);
+ 
   const [resumes, setResumes] = useState<any[]>([]);
 
   const fetchResumes = async () => {
@@ -56,12 +56,22 @@ export default function JobDetailsPage({
         console.log("Resume upload error:", uploadError.message);
         continue;
       }
+      const {
+  data: { user },
+  error: userError,
+} = await supabase.auth.getUser();
+
+if (userError || !user) {
+  alert("Please login first.");
+  return;
+}
 
       const { data: urlData } = supabase.storage
         .from("resumes")
         .getPublicUrl(filePath);
 
       const { error: insertError } = await supabase.from("resumes").insert({
+        user_id: user.id,
         job_id: job.id,
         file_name: file.name,
         file_url: urlData.publicUrl,
@@ -88,79 +98,7 @@ export default function JobDetailsPage({
 
     setResumes((prev) => prev.filter((resume) => resume.id !== id));
   };
-const runScreening = async () => {
-  if (resumes.length === 0) return;
 
-  setLoading(true);
-
-  try {
-    const results = [];
-
-    for (const resume of resumes) {
-      if (!resume.fileUrl) {
-        console.log("Missing file URL for:", resume.fileName);
-        continue;
-      }
-
-      const response = await fetch(resume.fileUrl);
-      const blob = await response.blob();
-
-      const file = new File([blob], resume.fileName, {
-        type: resume.fileType || "application/pdf",
-      });
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("job_description", job.description || "");
-
-      const scanResponse = await fetch("http://127.0.0.1:8000/scan-resume", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!scanResponse.ok) {
-        const errorText = await scanResponse.text();
-        console.log("Backend error:", errorText);
-        continue;
-      }
-
-      const data = await scanResponse.json();
-
-      await supabase
-        .from("resumes")
-        .update({
-          status: data.status || "Needs Review",
-          score: data.score || 0,
-          matched_skills: data.matchedSkills || [],
-          missing_skills: data.missingSkills || [],
-          analysis: data.analysis || "",
-        })
-        .eq("id", resume.id);
-
-      results.push({
-        id: resume.id,
-        name: data.name || resume.fileName.replace(".pdf", "").replace(".docx", ""),
-        role: job.role || "Candidate",
-        score: data.score || 0,
-        status: data.status || "Needs Review",
-        fileName: resume.fileName,
-        matchedSkills: data.matchedSkills || [],
-        missingSkills: data.missingSkills || [],
-        semanticScore: data.semanticScore || 0,
-        keywordScore: data.keywordScore || 0,
-        time: data.time,
-      });
-    }
-
-    await fetchResumes();
-    onScreeningComplete(results);
-  } catch (error) {
-    console.error("Screening failed:", error);
-    alert("Screening failed. Make sure backend is running.");
-  } finally {
-    setLoading(false);
-  }
-};
 
   return (
     <div className="p-6 text-white">
@@ -247,13 +185,7 @@ const runScreening = async () => {
           </div>
         )}
 
-        <button
-          onClick={runScreening}
-          disabled={loading || resumes.length === 0}
-          className="mt-6 rounded-xl bg-green-500 px-5 py-2 text-black font-semibold disabled:opacity-50"
-        >
-          {loading ? "Screening..." : "Run Screening"}
-        </button>
+   
       </div>
     </div>
   );

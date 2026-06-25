@@ -147,28 +147,30 @@ async function runAIScreening() {
   setLoading(true);
 
   try {
-    const response = await fetch("http://localhost:8000/screen-resumes-ai", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        job_id: selectedJob.id,
-        job_title: selectedJob.title || selectedJob.role || "",
-        job_description: `${selectedJob.description || ""} ${
-          selectedJob.eligibility || ""
-        } ${selectedJob.skills || ""}`,
-        resumes: resumesWithUrls,
-      }),
-    });
+   const scanResponse = await fetch(
+  `${import.meta.env.VITE_API_URL}/screen-resumes-ai`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      job_id: selectedJob.id,
+      job_title: selectedJob.title || selectedJob.role || "",
+      job_description: `${selectedJob.description || ""} ${
+        selectedJob.eligibility || ""
+      } ${selectedJob.skills || ""}`,
+      resumes: resumesWithUrls,
+    }),
+  }
+);
+  const data = await scanResponse.json();
 
-    const data = await response.json();
+console.log("AI backend response:", data);
 
-    console.log("AI backend response:", data);
-
-    if (!response.ok) {
-      throw new Error(data.detail || "Backend AI screening failed");
-    }
+if (!scanResponse.ok) {
+  throw new Error(data.detail || "Backend AI screening failed");
+}
 
     for (const result of data.results) {
       const { error } = await supabase
