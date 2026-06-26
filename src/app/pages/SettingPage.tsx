@@ -19,6 +19,7 @@ import {
   Crown,
 } from "lucide-react";
 
+import { Loader2 } from "lucide-react";
 import { c, FONT } from "../../styles/theme";
 import { supabase } from "../../lib/supabase";
 
@@ -228,20 +229,22 @@ const darkMode = true;
       .slice(0, 2)
       .toUpperCase() || "U";
 
-  if (loading) {
-    return (
-      <main
-        className="flex min-h-screen items-center justify-center"
-        style={{
-          background: theme.bg,
-          color: theme.text,
-          fontFamily: FONT,
-        }}
-      >
-        Loading settings...
-      </main>
-    );
-  }
+
+if (loading) {
+  return (
+    <main
+      className="flex min-h-screen flex-col items-center justify-center gap-4"
+      style={{
+        background: theme.bg,
+        color: theme.text,
+        fontFamily: FONT,
+      }}
+    >
+      <Loader2 className="h-8 w-8 animate-spin text-amber-400" />
+      <p className="text-sm">Loading settings...</p>
+    </main>
+  );
+}
 
   return (
     <main
